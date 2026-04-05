@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METROCLASSY | Admin Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #000; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .comic-font { font-family: 'Bangers', cursive; letter-spacing: 0.05em; }
+        .glitch-bar { height: 4px; background: #3b82f6; width: 0%; box-shadow: 0 0 20px #3b82f6; transition: width 0.4s ease; }
+        .scanner-line { height: 100vh; width: 100%; background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.1), transparent); position: absolute; top: -100%; animation: scan 3s linear infinite; }
+        @keyframes scan { 0% { top: -100%; } 100% { top: 100%; } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen">
+    <div class="scanner-line"></div>
+    
+    <div class="z-10 text-center">
+        <h1 class="comic-font text-6xl italic mb-4 animate-pulse">METROCLASSY</h1>
+        <p id="status-text" class="text-blue-500 font-black text-[10px] uppercase tracking-[0.5em] mb-8">Initializing HQ Uplink...</p>
+        
+        <div class="w-64 h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+            <div id="progress-bar" class="glitch-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        const admin = JSON.parse(localStorage.getItem("syndicate_admin_root"));
+        const bar = document.getElementById("progress-bar");
+        const status = document.getElementById("status-text");
+
+        const protocols = [
+            { p: 20, t: "Fetching Neural Archives..." },
+            { p: 50, t: "Synchronizing Vault Keys..." },
+            { p: 80, t: "Verifying Root Clearance..." },
+            { p: 100, t: "Uplink Established" }
+        ];
+
+        let currentStep = 0;
+
+        function runLoading() {
+            if (currentStep < protocols.length) {
+                const step = protocols[currentStep];
+                bar.style.width = step.p + "%";
+                status.innerText = step.t;
+                currentStep++;
+                setTimeout(runLoading, 600);
+            } else {
+                setTimeout(redirect, 500);
+            }
+        }
+
+        function redirect() {
+            // SECURITY CHECK: Ensure only authenticated Admins proceed
+            if (admin && admin.role === 'admin') {
+                window.location.href = "./admin-hq.html"; // Adjust path to match your folder structure
+            } else {
+                window.location.href = "./admin-login.html";
+            }
+        }
+
+        window.onload = runLoading;
+    </script>
+</body>
+
+</html>
