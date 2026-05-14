@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+    (function () {
+        // Retrieve the authenticated agent from storage
+        const user = JSON.parse(localStorage.getItem("syndicate_admin_root"));
+
+        // If no signal is detected or the role is not 'admin', redirect to terminal
+        if (!user || user.role !== "admin") {
+            // Optional: Only alert if they are actually trying to access a restricted sector
+            alert("ACCESS DENIED: SECURE HANDSHAKE REQUIRED");
+            window.location.href = "admin-login.html";
+        }
+        
+        // Log for terminal debugging
+        console.log("Terminal Uplink: Verified");
+    })();
+</script>
+    <meta charset="UTF-8" />
+    <title>METROCLASSY HQ | Sector Command</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #050505;
+        color: #fff;
+        overflow: hidden;
+        height: 100vh;
+      }
+      .comic-font {
+        font-family: "Bangers", cursive;
+        letter-spacing: 0.05em;
+      }
+      .hq-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: 100vh;
+      }
+      .sidebar {
+        background: #0a0a0a;
+        border-right: 4px solid #111;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .nav-link {
+        padding: 12px 20px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        transition: 0.2s;
+        border: 2px solid transparent;
+        cursor: pointer;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+      .nav-link:hover {
+        color: #fff;
+        background: #111;
+        border-color: #333;
+      }
+      .nav-link.active {
+        background: #22c55e;
+        color: #000;
+        border-color: #000;
+        box-shadow: 4px 4px 0px #fff;
+      }
+      .content-panel {
+        overflow-y: auto;
+        padding: 3rem;
+        background: radial-gradient(circle at top left, #111, #050505);
+      }
+      .brutal-card {
+        background: #0f0f0f;
+        border: 4px solid #1a1a1a;
+        border-radius: 2rem;
+        padding: 2rem;
+        box-shadow: 10px 10px 0px #000;
+        margin-bottom: 2rem;
+      }
+      label {
+        display: block;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        color: #555;
+        margin-bottom: 8px;
+        margin-left: 4px;
+      }
+      .terminal-input {
+        background: #000;
+        border: 2px solid #222;
+        padding: 12px 16px;
+        border-radius: 1rem;
+        width: 100%;
+        color: #22c55e;
+        font-family: monospace;
+        outline: none;
+      }
+      .terminal-input:focus {
+        border-color: #22c55e;
+      }
+      .item-row {
+        background: #000;
+        border: 2px solid #222;
+        padding: 15px;
+        border-radius: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        transition: 0.2s;
+      }
+      .item-row:hover {
+        border-color: #22c55e;
+        transform: translateX(5px);
+      }
+      .delete-btn {
+        color: #ef4444;
+        font-weight: 900;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 8px;
+      }
+      .delete-btn:hover {
+        background: rgba(239, 68, 68, 0.1);
+      }
+      .btn-action {
+        background: #22c55e;
+        color: #000;
+        font-family: "Bangers";
+        font-size: 1.5rem;
+        padding: 10px 20px;
+        border-radius: 1rem;
+        border: 3px solid #000;
+        box-shadow: 4px 4px 0px #fff;
+        cursor: pointer;
+      }
+      .btn-action:active {
+        transform: translate(2px, 2px);
+        box-shadow: 0px 0px 0px #000;
+      }
+      .section-title {
+        font-family: "Bangers";
+        font-size: 2rem;
+        color: #22c55e;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      /* Calendar Icon Style */
+      input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hq-container">
+      <aside class="sidebar">
+        <div class="mb-12">
+          <h1 class="comic-font text-3xl text-[#22c55e] italic leading-none">
+            SYNDICATE
+          </h1>
+          <span
+            class="text-[9px] font-black tracking-[0.4em] text-zinc-600 uppercase"
+            >Archive Command</span
+          >
+        </div>
+
+        <nav class="flex-grow">
+          <a href="admin-hq.html" class="nav-link"><span>📡</span> OVERVIEW</a>
+          <a href="admin-inventory.html" class="nav-link"
+            ><span>📦</span> INVENTORY</a
+          >
+          <a href="admin-products.html" class="nav-link"
+            ><span>🛠</span> PRODUCTS</a
+          >
+          <a href="admin-categories.html" class="nav-link active"
+            ><span>💰</span> CATEGORY</a
+          >
+          <a href="admin-orders.html" class="nav-link"><span>👤</span> ORDERS</a>
+          <a href="admin-reviews.html" class="nav-link"
+            ><span>⚖</span> REVIEWS</a
+          >
+        </nav>
+
+        <div class="mt-auto pt-10 border-t border-zinc-800">
+          <p class="text-[10px] font-black uppercase text-zinc-500 mb-2">
+            Authenticated As
+          </p>
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 bg-[#22c55e] border-2 border-black rounded-lg flex items-center justify-center text-black font-black"
+            >
+              AD
+            </div>
+            <span class="text-xs font-bold uppercase tracking-widest"
+              >ADMIN_ROOT</span
+            >
+          </div>
+        </div>
+      </aside>
+
+      <main class="content-panel">
+        <header class="mb-12">
+          <h2 class="comic-font text-6xl uppercase">Sector Management</h2>
+          <p class="text-zinc-500 font-bold text-sm tracking-widest uppercase">
+            Organize Collections, Categories, and Vouchers
+          </p>
+        </header>
+
+        <div class="grid grid-cols-2 gap-10">
+          <section>
+            <div class="brutal-card">
+              <h3 class="section-title text-blue-500">01. Create Collection</h3>
+              <div class="flex gap-4 mb-8">
+                <div class="flex-grow">
+                  <label>Collection Title</label>
+                  <input
+                    type="text"
+                    id="colName"
+                    class="terminal-input"
+                    placeholder="E.G. TOKYO DRIFT"
+                  />
+                </div>
+                <button
+                  onclick="addCollection()"
+                  class="btn-action mt-6 bg-blue-600"
+                >
+                  CREATE
+                </button>
+              </div>
+              <label>Active Collections</label>
+              <div
+                id="collectionList"
+                class="max-h-[300px] overflow-y-auto pr-2 no-scrollbar"
+              ></div>
+            </div>
+          </section>
+
+          <section>
+            <div class="brutal-card">
+              <h3 class="section-title">02. Create Category</h3>
+              <div class="space-y-4 mb-8">
+                <div>
+                  <label>Parent Collection</label>
+                  <select class="terminal-input" id="parentCol"></select>
+                </div>
+                <div class="flex gap-4">
+                  <div class="flex-grow">
+                    <label>Category Name</label>
+                    <input
+                      type="text"
+                      id="catName"
+                      class="terminal-input"
+                      placeholder="E.G. ZIP HOODIES"
+                    />
+                  </div>
+                  <button onclick="addCategory()" class="btn-action mt-6">
+                    ADD
+                  </button>
+                </div>
+              </div>
+              <label>Current Mapping</label>
+              <div
+                id="categoryList"
+                class="max-h-[210px] overflow-y-auto pr-2 no-scrollbar"
+              ></div>
+            </div>
+          </section>
+
+          <section class="col-span-2">
+            <div class="brutal-card">
+              <h3 class="section-title text-yellow-500">
+                03. Tactical Voucher Generation
+              </h3>
+              <div class="grid grid-cols-3 gap-6">
+                <div class="space-y-4">
+                  <div>
+                    <label>Coupon Code (Secret Key)</label>
+                    <input
+                      type="text"
+                      id="cpCode"
+                      class="terminal-input"
+                      placeholder="METROCLASSY_20"
+                    />
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label>Disc. Type</label>
+                      <select id="cpType" class="terminal-input">
+                        <option value="percentage">PERCENTAGE (%)</option>
+                        <option value="flat">FLAT CASH (₹)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Value</label>
+                      <input
+                        type="number"
+                        id="cpValue"
+                        class="terminal-input"
+                        placeholder="20"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label>Valid From > To</label>
+                    <div class="flex gap-2">
+                      <input
+                        type="date"
+                        id="cpStart"
+                        class="terminal-input text-[10px]"
+                      />
+                      <input
+                        type="date"
+                        id="cpEnd"
+                        class="terminal-input text-[10px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4 border-l border-zinc-800 pl-6">
+                  <div>
+                    <label>Max Uses (Total Agents)</label>
+                    <input
+                      type="number"
+                      id="cpTotalLimit"
+                      class="terminal-input"
+                      placeholder="100"
+                    />
+                  </div>
+                  <div>
+                    <label>Usage per Agent</label>
+                    <input
+                      type="number"
+                      id="cpUserLimit"
+                      class="terminal-input"
+                      placeholder="1"
+                      value="1"
+                    />
+                  </div>
+                  <div>
+                    <label>Min. Cart Value (₹)</label>
+                    <input
+                      type="number"
+                      id="cpMinCart"
+                      class="terminal-input"
+                      placeholder="999"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  class="flex flex-col justify-end border-l border-zinc-800 pl-6"
+                >
+                  <p class="text-[9px] text-zinc-500 mb-4 italic">
+                    Confirming this deployment will immediately uplink the code
+                    to the Checkout Terminal.
+                  </p>
+                  <button
+                    onclick="addCoupon()"
+                    class="btn-action bg-yellow-500 w-full"
+                  >
+                    DEPLOY VOUCHER
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-10">
+                <label>Active Tactical Codes</label>
+                <div
+                  id="couponList"
+                  class="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto no-scrollbar"
+                ></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const API_URL = "https://backendmetro.vercel.app/api";
+      // AUTH SIGNAL PROTOCOL
+      const user = JSON.parse(localStorage.getItem("syndicate_admin_root"));
+
+      window.onload = loadSectorData;
+
+      async function loadSectorData() {
+        try {
+          const res = await fetch(`${API_URL}/sector-data`, {
+            headers: {
+              "admin-signal": user?.id || "" // Authorize handshake
+            }
+          });
+          const data = await res.json();
+
+          renderCollections(data.collections);
+          renderCategories(data.categories);
+          updateDropdown(data.collections);
+          if (data.coupons) renderCoupons(data.coupons);
+        } catch (err) {
+            console.error("Archive Link Offline");
+        }
+      }
+
+      async function addCollection() {
+        const name = document.getElementById("colName").value;
+        if (!name) return;
+        const res = await fetch(`${API_URL}/collections`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "admin-signal": user.id // Tactical key
+          },
+          body: JSON.stringify({ name }),
+        });
+        if (res.ok) {
+          document.getElementById("colName").value = "";
+          loadSectorData();
+        }
+      }
+
+      async function deleteCollection(id) {
+        if (
+          !confirm(
+            "WARNING: Deleting this collection will destroy all linked categories! Proceed?",
+          )
+        )
+          return;
+        await fetch(`${API_URL}/collections/${id}`, { 
+          method: "DELETE",
+          headers: { "admin-signal": user.id } 
+        });
+        loadSectorData();
+      }
+
+      async function toggleCollection(id) {
+        await fetch(`${API_URL}/collections/${id}/toggle`, { 
+          method: "PATCH",
+          headers: { "admin-signal": user.id }
+        });
+        loadSectorData();
+      }
+
+      async function addCategory() {
+        const name = document.getElementById("catName").value;
+        const parentId = document.getElementById("parentCol").value;
+        if (!name || !parentId) return;
+        await fetch(`${API_URL}/categories`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "admin-signal": user.id 
+          },
+          body: JSON.stringify({ name, parentCollection: parentId }),
+        });
+        document.getElementById("catName").value = "";
+        loadSectorData();
+      }
+
+      async function addCoupon() {
+        const payload = {
+          code: document.getElementById("cpCode").value.toUpperCase(),
+          type: document.getElementById("cpType").value,
+          value: Number(document.getElementById("cpValue").value),
+          startDate: document.getElementById("cpStart").value,
+          endDate: document.getElementById("cpEnd").value,
+          totalLimit: Number(document.getElementById("cpTotalLimit").value),
+          userLimit: Number(document.getElementById("cpUserLimit").value),
+          minCart: Number(document.getElementById("cpMinCart").value),
+        };
+
+        if (!payload.code || !payload.value)
+          return alert("SIGNAL ERROR: MISSION PARAMS INCOMPLETE");
+
+        const res = await fetch(`${API_URL}/admin/coupons`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "admin-signal": user.id 
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          [
+            "cpCode",
+            "cpValue",
+            "cpStart",
+            "cpEnd",
+            "cpTotalLimit",
+            "cpMinCart",
+          ].forEach((id) => (document.getElementById(id).value = ""));
+          loadSectorData();
+        }
+      }
+
+      async function deleteCoupon(id) {
+        if (!confirm("TERMINATE THIS VOUCHER SIGNAL?")) return;
+        try {
+          const res = await fetch(`${API_URL}/admin/coupons/${id}`, {
+            method: "DELETE",
+            headers: { "admin-signal": user.id } // Auth header added
+          });
+          if (res.ok) {
+            loadSectorData();
+          }
+        } catch (err) {
+          console.error("Signal Lost:", err);
+        }
+      }
+
+      async function toggleCoupon(id) {
+        await fetch(`${API_URL}/admin/coupons/${id}/toggle`, {
+          method: "PATCH",
+          headers: { "admin-signal": user.id }
+        });
+        loadSectorData();
+      }
+
+      function renderCollections(cols) {
+        const container = document.getElementById("collectionList");
+        container.innerHTML = cols
+          .map(
+            (col) => `
+            <div class="item-row ${!col.isActive ? "opacity-40" : ""}">
+                <span class="font-black text-xs uppercase tracking-widest">${col.name}</span>
+                <div class="flex gap-4 items-center">
+                    <span class="text-[8px] cursor-pointer hover:text-white" onclick="toggleCollection('${col._id}')">
+                        ${col.isActive ? "🟢 ACTIVE" : "🔴 INACTIVE"}
+                    </span>
+                    <span class="delete-btn" onclick="deleteCollection('${col._id}')">×</span>
+                </div>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      function renderCategories(cats) {
+        const container = document.getElementById("categoryList");
+        container.innerHTML = cats
+          .map(
+            (cat) => `
+            <div class="item-row">
+                <div>
+                    <p class="text-[8px] text-zinc-500 font-black">${cat.parentCollection?.name || "ORPHANED"} ></p>
+                    <span class="font-black text-xs uppercase">${cat.name}</span>
+                </div>
+                <span class="delete-btn" onclick="deleteCategory('${cat._id}')">×</span>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      function renderCoupons(coupons) {
+        const container = document.getElementById("couponList");
+        container.innerHTML = coupons
+          .map(
+            (c) => `
+            <div class="item-row ${!c.isActive ? "opacity-30 grayscale" : ""}">
+                <div class="flex flex-col">
+                    <span class="font-black text-xs text-yellow-500">${c.code}</span>
+                    <span class="text-[8px] text-zinc-500 font-bold">${c.type === "percentage" ? c.value + "%" : "₹" + c.value} OFF | MIN ₹${c.minCart}</span>
+                    <span class="text-[7px] text-zinc-600 mt-1">${new Date(c.startDate).toLocaleDateString()} to ${new Date(c.endDate).toLocaleDateString()}</span>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <span class="text-[8px] cursor-pointer" onclick="toggleCoupon('${c._id}')">${c.isActive ? "🟢" : "🔴"}</span>
+                    <span class="delete-btn" onclick="deleteCoupon('${c._id}')">×</span>
+                </div>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      function updateDropdown(cols) {
+        const select = document.getElementById("parentCol");
+        select.innerHTML = cols
+          .map(
+            (col) =>
+              `<option value="${col._id}">${col.name.toUpperCase()}</option>`,
+          )
+          .join("");
+      }
+
+      async function deleteCategory(id) {
+        await fetch(`${API_URL}/categories/${id}`, { 
+          method: "DELETE",
+          headers: { "admin-signal": user.id } 
+        });
+        loadSectorData();
+      }
+    </script>
+  </body>
+
+</html>
+

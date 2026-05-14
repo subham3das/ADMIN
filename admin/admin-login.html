@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>METROCLASSY | Command Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #000;
+        color: #fff;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .comic-font {
+        font-family: "Bangers", cursive;
+        letter-spacing: 0.05em;
+      }
+      .terminal-box {
+        border: 6px solid #22c55e;
+        border-radius: 2rem;
+        padding: 3rem;
+        background: #0a0a0a;
+        box-shadow: 0 0 50px rgba(34, 197, 94, 0.2);
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+      }
+      .input-brutal {
+        background: #000;
+        border: 3px solid #1a1a1a;
+        padding: 16px;
+        border-radius: 1rem;
+        color: #22c55e;
+        width: 100%;
+        font-family: monospace;
+        outline: none;
+        transition: 0.2s;
+      }
+      .input-brutal:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+      }
+      .secure-lock {
+        display: none;
+        border-top: 2px dashed #333;
+        margin-top: 20px;
+        padding-top: 20px;
+        animation: fadeIn 0.4s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .scanline {
+        width: 100%;
+        height: 2px;
+        background: rgba(34, 197, 94, 0.1);
+        position: absolute;
+        top: 0;
+        left: 0;
+        animation: scan 4s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes scan {
+        from {
+          top: 0;
+        }
+        to {
+          top: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="terminal-box">
+      <div class="scanline"></div>
+
+      <div class="text-center mb-10">
+        <h1 class="comic-font text-5xl italic text-[#22c55e]">HQ ACCESS</h1>
+        <p
+          class="text-[9px] font-black text-zinc-600 mt-2 tracking-[0.3em] uppercase"
+        >
+          Unauthorized entry strictly prohibited
+        </p>
+      </div>
+
+      <form
+        id="admin-login-form"
+        onsubmit="handleAuth(event)"
+        class="space-y-6"
+      >
+        <div>
+          <label
+            class="text-[9px] font-black uppercase text-zinc-500 ml-2 mb-1 block"
+            >Identity Signal (Email)</label
+          >
+          <input
+            type="email"
+            id="email"
+            placeholder="ADMIN_REF_ID"
+            class="input-brutal"
+            required
+          />
+        </div>
+
+        <div>
+          <label
+            class="text-[9px] font-black uppercase text-zinc-500 ml-2 mb-1 block"
+            >Encryption Key (Password)</label
+          >
+          <input
+            type="password"
+            id="password"
+            placeholder="••••••••"
+            class="input-brutal"
+            required
+          />
+        </div>
+
+        <div id="secure-sector" class="secure-lock">
+          <label
+            class="text-[9px] font-black uppercase text-yellow-500 ml-2 mb-1 block"
+            >Tactical Secure Code</label
+          >
+          <input
+            type="text"
+            id="secureCode"
+            placeholder="6-DIGIT CODE"
+            maxlength="6"
+            class="input-brutal !border-yellow-500 !text-yellow-500"
+          />
+          <p class="text-[8px] text-zinc-600 mt-2 italic font-bold">
+            Second-stage authorization required for admin level
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          id="auth-btn"
+          class="w-full bg-[#22c55e] text-black comic-font py-5 rounded-2xl text-2xl border-4 border-black shadow-[4px_4px_0px_#fff] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all uppercase"
+        >
+          Initialize Login
+        </button>
+      </form>
+    </div>
+
+    <script>
+      const API_URL = "https://backendmetro.vercel.app/api";
+
+      async function handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const secureCode = document.getElementById("secureCode").value;
+        const btn = document.getElementById("auth-btn");
+
+        btn.innerText = "AUTHENTICATING...";
+
+        try {
+          // TACTICAL FIX: Changed endpoint to /auth/admin-login to match your new backend route
+          const res = await fetch(`${API_URL}/auth/admin-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, secureCode }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            // TACTICAL FIX: Use a unique key for the Admin session
+            localStorage.setItem(
+              "syndicate_admin_root",
+              JSON.stringify(data.user),
+            );
+            btn.innerText = "ACCESS GRANTED";
+
+            setTimeout(() => {
+              window.location.href = "admin-hq.html";
+            }, 800);
+          } else {
+            // Trigger Secure Code step if rejected for missing MFA (status 403)
+            if (res.status === 403) {
+              document.getElementById("secure-sector").style.display = "block";
+              btn.innerText = "VERIFY CODE";
+              btn.style.backgroundColor = "#fde047";
+            } else {
+              // This will now correctly show "SIGNAL REJECTED: INVALID CREDENTIALS" from your Admin route
+              alert(data.error || "SIGNAL REJECTED");
+              btn.innerText = "INITIALIZE LOGIN";
+            }
+          }
+        } catch (err) {
+          alert("COMMAND CENTER OFFLINE");
+          btn.innerText = "INITIALIZE LOGIN";
+        }
+      }
+    </script>
+  </body>
+</html>

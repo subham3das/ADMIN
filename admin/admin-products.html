@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+    (function () {
+        // Retrieve the authenticated agent from storage
+        const user = JSON.parse(localStorage.getItem("syndicate_admin_root"));
+
+        // If no signal is detected or the role is not 'admin', redirect to terminal
+        if (!user || user.role !== "admin") {
+            // Optional: Only alert if they are actually trying to access a restricted sector
+            alert("ACCESS DENIED: SECURE HANDSHAKE REQUIRED");
+            window.location.href = "admin-login.html";
+        }
+        
+        // Log for terminal debugging
+        console.log("Terminal Uplink: Verified");
+    })();
+</script>
+    <meta charset="UTF-8" />
+    <title>METROCLASSY HQ | Archive Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #050505;
+        color: #fff;
+        overflow: hidden;
+      }
+      .comic-font {
+        font-family: "Bangers", cursive;
+      }
+      .hq-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        height: 100vh;
+      }
+      .sidebar {
+        background: #0a0a0a;
+        border-right: 4px solid #111;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .nav-link {
+        padding: 12px 20px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        transition: 0.2s;
+        border: 2px solid transparent;
+        cursor: pointer;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .nav-link.active {
+        background: #22c55e;
+        color: #000;
+        border-color: #000;
+        box-shadow: 4px 4px 0px #fff;
+      }
+      .content-panel {
+        overflow-y: auto;
+        padding: 3rem;
+        background: radial-gradient(circle at top right, #111, #050505);
+      }
+      .product-row {
+        background: #000;
+        border: 2px solid #222;
+        transition: 0.1s;
+      }
+      .product-row:hover {
+        border-color: #22c55e;
+        background: #080808;
+      }
+      .row-critical {
+        border-left: 6px solid #ef4444 !important;
+        background: rgba(239, 68, 68, 0.03);
+      }
+      .stock-tag {
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 8px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+      .tag-low {
+        background: #fde047;
+        color: #000;
+      }
+      .tag-zero {
+        background: #ef4444;
+        color: #fff;
+      }
+      #edit-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .modal-box {
+        background: #0f0f0f;
+        border: 4px solid #22c55e;
+        border-radius: 2rem;
+        width: 100%;
+        max-width: 550px;
+        padding: 2.5rem;
+        box-shadow: 20px 20px 0px #000;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .t-input {
+        background: #000;
+        border: 2px solid #222;
+        padding: 12px;
+        width: 100%;
+        color: #22c55e;
+        font-family: monospace;
+        border-radius: 10px;
+        outline: none;
+        margin-top: 5px;
+        font-size: 13px;
+      }
+      .t-input:focus {
+        border-color: #22c55e;
+      }
+      .btn-deploy {
+        background: #22c55e;
+        color: #000;
+        padding: 15px;
+        border-radius: 1.25rem;
+        font-family: "Bangers";
+        font-size: 1.5rem;
+        border: 4px solid #000;
+        box-shadow: 4px 4px 0px #fff;
+        width: 100%;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .btn-deploy:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-action {
+        font-size: 10px;
+        font-weight: 900;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 2px solid #000;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+      .brutal-border {
+        border: 3px solid #000;
+        box-shadow: 4px 4px 0px #000;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="edit-modal" class="no-scrollbar">
+      <div class="modal-box">
+        <div
+          class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-4"
+        >
+          <h3 class="comic-font text-4xl text-[#22c55e] italic">
+            GEAR OVERHAUL
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="text-3xl text-zinc-500 hover:text-white transition"
+          >
+            ×
+          </button>
+        </div>
+
+        <form id="edit-form" class="flex flex-col gap-5">
+          <input type="hidden" id="edit-id" />
+
+          <div>
+            <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">01. Identity (Name)</label>
+            <input type="text" id="edit-name" class="t-input" placeholder="PRODUCT CODENAME" />
+          </div>
+
+          <div>
+            <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-2">02. Media Hangar</label>
+            <div class="flex gap-2 mb-3">
+              <input type="file" id="editMediaInput" hidden multiple accept="image/*,video/*" onchange="handleEditMedia(this)" />
+              <button type="button" onclick="document.getElementById('editMediaInput').click()" class="bg-zinc-800 text-white text-[9px] font-black px-4 py-2 rounded-lg border-2 border-black uppercase">+ Add Assets</button>
+            </div>
+            <div id="editGalleryGrid" class="grid grid-cols-4 gap-2 bg-black p-2 rounded-xl border border-zinc-800"></div>
+            <p class="text-[7px] text-zinc-500 mt-1 uppercase font-bold italic">Click slot to set as primary thumbnail</p>
+          </div>
+
+          <div>
+            <label
+              class="text-[10px] font-black text-zinc-500 uppercase tracking-widest"
+              >02. Transmission Specs (Description)</label
+            >
+            <textarea
+              id="edit-desc"
+              class="t-input h-24 no-scrollbar"
+              placeholder="TECHNICAL SPECIFICATIONS..."
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="text-[10px] font-black text-zinc-500 uppercase tracking-widest"
+                >03. Base MRP (₹)</label
+              >
+              <input type="number" id="edit-mrp" class="t-input" />
+            </div>
+            <div>
+              <label
+                class="text-[10px] font-black text-zinc-500 uppercase tracking-widest"
+                >04. Sale Price (₹)</label
+              >
+              <input type="number" id="edit-sale" class="t-input" />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">05. Inventory Allocation</label>
+            <div class="bg-black p-4 rounded-xl border-2 border-zinc-800 space-y-4">
+              <div class="size-matrix flex gap-2 flex-wrap" id="edit-size-matrix">
+                <div class="size-box" data-size="XS">XS</div>
+                <div class="size-box" data-size="S">S</div>
+                <div class="size-box" data-size="M">M</div>
+                <div class="size-box" data-size="L">L</div>
+                <div class="size-box" data-size="XL">XL</div>
+                <div class="size-box" data-size="XXL">XXL</div>
+                <div class="size-box" data-size="3XL">3XL</div>
+              </div>
+              <div id="edit-stock-grid" class="grid grid-cols-4 gap-2"></div>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">06. Color Spectrum (Add Multiple)</label>
+            <div class="flex gap-3 items-center bg-black p-3 rounded-xl border border-zinc-800 mb-3">
+              <input type="color" id="edit-color-picker" class="w-10 h-10 bg-transparent border-none cursor-pointer" oninput="document.getElementById('edit-color-hex').value = this.value.toUpperCase()" />
+              <input type="text" id="edit-color-hex" class="t-input flex-grow" placeholder="#HEX_CODE" />
+              <button type="button" onclick="addEditColor()" class="bg-[#22c55e] text-black px-3 font-black uppercase text-[9px] h-10 rounded-lg border-2 border-black">LOCK +</button>
+            </div>
+            <div id="edit-colors-grid" class="flex flex-wrap gap-3"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">07. Collection</label>
+              <select id="edit-collection" class="t-input"></select>
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">08. Category</label>
+              <select id="edit-category" class="t-input"></select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              class="text-[10px] font-black text-zinc-500 uppercase tracking-widest"
+              >09. Search Tags</label
+            >
+            <input
+              type="text"
+              id="edit-tags"
+              class="t-input"
+              placeholder="streetwear, oversized, techwear"
+            />
+            <p class="text-[8px] text-zinc-600 mt-1 font-bold uppercase">Use commas or spaces to separate tags for search discovery</p>
+          </div>
+
+          <div class="pt-6 border-t border-zinc-800 flex flex-col gap-3">
+            <button
+              type="submit"
+              id="update-btn"
+              class="btn-deploy italic"
+            >
+              Commit Protocol Update
+            </button>
+            <button
+              type="button"
+              onclick="deleteGear()"
+              class="w-full bg-red-600/10 text-red-500 font-black py-3 rounded-xl border border-red-900 uppercase text-[10px] tracking-tighter hover:bg-red-600 hover:text-white transition"
+            >
+              Wipe Gear from Archives Permanently
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="hq-container">
+      <aside class="sidebar">
+        <div class="mb-12">
+          <h1 class="comic-font text-3xl text-[#22c55e] italic leading-none">
+            SYNDICATE
+          </h1>
+          <span
+            class="text-[9px] font-black tracking-[0.4em] text-zinc-600 uppercase"
+            >Vault Control</span
+          >
+        </div>
+        <nav class="flex-grow">
+          <a href="admin-hq.html" class="nav-link"><span>📡</span> OVERVIEW</a>
+          <a href="admin-inventory.html" class="nav-link"
+            ><span>📦</span> INVENTORY</a
+          >
+          <a href="admin-products.html" class="nav-link active"
+            ><span>🛠</span> PRODUCTS</a
+          >
+          <a href="admin-categories.html" class="nav-link"
+            ><span>💰</span> CATEGORY</a
+          >
+          <a href="admin-orders.html" class="nav-link"
+            ><span>👤</span> ORDERS</a
+          >
+          <a href="admin-reviews.html" class="nav-link"
+            ><span>⚖</span> REVIEWS</a
+          >
+        </nav>
+      </aside>
+
+      <main class="content-panel">
+        <header class="mb-12 flex justify-between items-center">
+          <div>
+            <h2 class="comic-font text-7xl uppercase italic">The Archives</h2>
+            <p
+              class="text-zinc-500 font-bold text-sm tracking-[0.2em] uppercase mt-2"
+            >
+              Modify Gear Metadata & Stock Levels
+            </p>
+          </div>
+          <button
+            onclick="window.location.href = 'admin-inventory.html'"
+            class="bg-blue-600 text-white font-black px-8 py-4 rounded-2xl brutal-border hover:bg-blue-500 transition"
+          >
+            + LIST NEW GEAR
+          </button>
+        </header>
+
+        <div
+          class="overflow-hidden rounded-[2.5rem] border-4 border-[#111] bg-[#0a0a0a]"
+        >
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr
+                class="text-[10px] font-black uppercase text-zinc-600 border-b-4 border-[#111] bg-[#0d0d0d]"
+              >
+                <th class="p-8">Asset Recon</th>
+                <th class="p-8 text-left">Sector Assignment</th>
+                <th class="p-8 text-center">Billing</th>
+                <th class="p-8 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="product-list"></tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const API_URL = "https://backendmetro.vercel.app/api";
+      // AUTH SIGNAL PROTOCOL
+      const user = JSON.parse(localStorage.getItem("syndicate_admin_root"));
+      let allGear = [];
+      let allSectorData = { collections: [], categories: [] };
+
+      window.onload = async () => {
+        await loadSectors();
+        await loadVault();
+      };
+
+      async function loadSectors() {
+        try {
+          const res = await fetch(`${API_URL}/sector-data`);
+          const data = await res.json();
+          allSectorData.collections = data.collections;
+          allSectorData.categories = data.categories;
+
+          const colSelect = document.getElementById('edit-collection');
+          const catSelect = document.getElementById('edit-category');
+          
+          colSelect.innerHTML = '<option value="">NO COLLECTION</option>';
+          allSectorData.collections.forEach(c => {
+            colSelect.innerHTML += `<option value="${c._id}">${c.name.toUpperCase()}</option>`;
+          });
+
+          colSelect.onchange = () => {
+              const selectedCol = colSelect.value;
+              catSelect.innerHTML = '<option value="">NO CATEGORY</option>';
+              allSectorData.categories
+                .filter(cat => !selectedCol || (cat.parentCollection && (cat.parentCollection._id === selectedCol || cat.parentCollection === selectedCol)))
+                .forEach(c => {
+                  catSelect.innerHTML += `<option value="${c._id}">${c.name.toUpperCase()}</option>`;
+                });
+          };
+
+          catSelect.innerHTML = '<option value="">NO CATEGORY</option>';
+          allSectorData.categories.forEach(c => {
+            catSelect.innerHTML += `<option value="${c._id}">${c.name.toUpperCase()}</option>`;
+          });
+        } catch (err) {
+          console.error("Sector Load Error:", err);
+        }
+      }
+
+      async function loadVault() {
+        try {
+          const res = await fetch(`${API_URL}/admin/all-products`, {
+             headers: { "admin-signal": user?.id || "" } // Authorized handshake
+          });
+          allGear = await res.json();
+          renderTable();
+        } catch (err) {
+          console.error("Archive Link Offline");
+        }
+      }
+
+      function renderTable() {
+        const list = document.getElementById("product-list");
+        if (allGear.length === 0) {
+          list.innerHTML = `<tr><td colspan="3" class="p-20 text-center text-zinc-700 font-black uppercase italic">No gear found in database.</td></tr>`;
+          return;
+        }
+
+        list.innerHTML = allGear
+          .map((p) => {
+            let lowStockAlerts = [];
+            let isCritical = false;
+            if (p.stock) {
+              Object.entries(p.stock).forEach(([size, qty]) => {
+                if (qty <= 5) {
+                  lowStockAlerts.push(
+                    `<span class="stock-tag ${qty === 0 ? "tag-zero" : "tag-low"}">${size}: ${qty}</span>`,
+                  );
+                  isCritical = true;
+                }
+              });
+            }
+
+            // SECTOR NAME LOOKUP (Support both populated objects and raw IDs)
+            let colName = 'NO COLLECTION';
+            if (p.collectionId) {
+                if (typeof p.collectionId === 'object' && p.collectionId.name) colName = p.collectionId.name;
+                else colName = allSectorData.collections.find(c => c._id === p.collectionId)?.name || 'NO COLLECTION';
+            }
+
+            let catName = 'NO CATEGORY';
+            if (p.categoryId) {
+                if (typeof p.categoryId === 'object' && p.categoryId.name) catName = p.categoryId.name;
+                else catName = allSectorData.categories.find(c => c._id === p.categoryId)?.name || 'NO CATEGORY';
+            }
+
+            return `
+                <tr class="product-row border-b border-[#111] ${isCritical ? "row-critical" : ""}">
+                    <td class="p-6 flex items-center gap-6">
+                        <div class="w-16 h-16 rounded-xl border-2 border-black overflow-hidden bg-zinc-900 flex-shrink-0">
+                            <img src="${p.media && p.media[p.primaryIndex || 0] ? p.media[p.primaryIndex || 0].url : (p.media && p.media[0] ? p.media[0].url : '')}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100?text=NO+IMAGE'">
+                        </div>
+                        <div>
+                            <p class="font-black text-base uppercase leading-none">${p.name}</p>
+                            <div class="flex gap-2 mt-2">
+                                ${lowStockAlerts.length > 0 ? lowStockAlerts.join("") : '<span class="text-[8px] text-zinc-600 font-bold uppercase">Vault Optimal</span>'}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-6 text-zinc-400">
+                        <p class="text-[10px] font-black uppercase text-blue-500">${colName}</p>
+                        <p class="text-[9px] uppercase font-bold">${catName}</p>
+                    </td>
+                    <td class="p-6 text-center">
+                        <p class="font-black text-lg text-[#22c55e]">₹${p.salePrice}</p>
+                        <p class="text-[10px] text-zinc-600 line-through">₹${p.mrp}</p>
+                    </td>
+                    <td class="p-6 text-right">
+                        <button onclick="openEditModal('${p._id}')" class="btn-action bg-blue-600 text-white border-blue-900 shadow-[2px_2px_0px_#000]">MODIFY ARCHIVE</button>
+                    </td>
+                </tr>`;
+          })
+          .join("");
+      }
+
+      let editMediaAssets = [];
+      let editPrimaryIndex = 0;
+
+      function openEditModal(id) {
+        const p = allGear.find((item) => item._id === id);
+        document.getElementById("edit-id").value = p._id;
+        document.getElementById("edit-name").value = p.name || "";
+        document.getElementById("edit-desc").value = p.description || "";
+        document.getElementById("edit-mrp").value = p.mrp || 0;
+        document.getElementById("edit-sale").value = p.salePrice || 0;
+
+        editMediaAssets = p.media ? [...p.media] : [];
+        editPrimaryIndex = Number(p.primaryIndex || 0);
+        renderEditGallery();
+
+        // Populate size matrix
+        const currentStock = p.stock || {};
+        document.querySelectorAll("#edit-size-matrix .size-box").forEach(box => {
+            const size = box.getAttribute("data-size");
+            if (currentStock[size] !== undefined) box.classList.add("active");
+            else box.classList.remove("active");
+        });
+        renderEditStock();
+
+        // Populate colors
+        const colorsGrid = document.getElementById('edit-colors-grid');
+        colorsGrid.innerHTML = '';
+        (p.colors || []).forEach(c => addColorChipToGrid(c, colorsGrid));
+
+        document.getElementById("edit-tags").value = p.tags || "";
+        document.getElementById("edit-collection").value = (typeof p.collectionId === 'object' ? p.collectionId._id : p.collectionId) || "";
+        document.getElementById("edit-category").value = (typeof p.categoryId === 'object' ? p.categoryId._id : p.categoryId) || "";
+
+        document.getElementById("edit-modal").style.display = "flex";
+
+        // Sync color picker
+        const ePicker = document.getElementById('edit-color-picker');
+        const eHex = document.getElementById('edit-color-hex');
+        eHex.value = "#000000";
+        ePicker.value = "#000000";
+      }
+
+      document.querySelectorAll("#edit-size-matrix .size-box").forEach(box => {
+          box.onclick = () => {
+              box.classList.toggle("active");
+              renderEditStock();
+          };
+      });
+
+      function renderEditStock() {
+          const id = document.getElementById('edit-id').value;
+          const p = allGear.find(i => i._id === id);
+          const grid = document.getElementById('edit-stock-grid');
+          
+          // Get current values from UI inputs if they exist
+          const uiValues = {};
+          document.querySelectorAll("#edit-stock-grid input").forEach(input => {
+              uiValues[input.getAttribute("data-size")] = input.value;
+          });
+
+          grid.innerHTML = '';
+          document.querySelectorAll("#edit-size-matrix .size-box.active").forEach(box => {
+              const size = box.getAttribute("data-size");
+              const qty = uiValues[size] !== undefined ? uiValues[size] : (p.stock && p.stock[size] !== undefined ? p.stock[size] : 0);
+              grid.innerHTML += `
+                  <div class="text-center">
+                    <label class="text-[9px] font-black text-zinc-600 block mb-1 uppercase">${size}</label>
+                    <input type="number" data-size="${size}" value="${qty}" class="t-input text-center p-1 edit-stock-input h-10">
+                  </div>
+              `;
+          });
+      }
+
+      function closeModal() {
+        document.getElementById("edit-modal").style.display = "none";
+      }
+
+      document.getElementById("edit-form").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("edit-id").value;
+        const btn = document.getElementById('update-btn');
+        btn.disabled = true;
+        btn.innerText = "UPDATING PROTOCOL...";
+
+        const stockObj = {};
+        document.querySelectorAll(".edit-stock-input").forEach((input) => {
+          stockObj[input.getAttribute("data-size")] =
+            parseInt(input.value) || 0;
+        });
+
+        const updateData = {
+          name: document.getElementById("edit-name").value,
+          description: document.getElementById("edit-desc").value,
+          mrp: parseInt(document.getElementById("edit-mrp").value),
+          salePrice: parseInt(document.getElementById("edit-sale").value),
+          stock: stockObj,
+          colors: Array.from(document.querySelectorAll('#edit-colors-grid .edit-color-chip')).map(c => c.getAttribute('data-color')),
+          tags: document.getElementById("edit-tags").value,
+          collectionId: document.getElementById("edit-collection").value,
+          categoryId: document.getElementById("edit-category").value,
+          media: editMediaAssets,
+          primaryIndex: editPrimaryIndex,
+        };
+
+        const res = await fetch(`${API_URL}/admin/products/${id}`, {
+          method: "PUT",
+          headers: { 
+            "Content-Type": "application/json",
+            "admin-signal": user?.id || ""
+          },
+          body: JSON.stringify(updateData),
+        });
+
+        if (res.ok) {
+          closeModal();
+          loadVault();
+        }
+        btn.disabled = false;
+        btn.innerText = "Commit Protocol Update";
+      };
+
+      async function deleteGear() {
+        const id = document.getElementById("edit-id").value;
+        if (!id) return;
+
+        if (!confirm("PERMANENTLY WIPE THIS GEAR FROM ARCHIVES?")) return;
+
+        try {
+          const res = await fetch(`${API_URL}/admin/products/${id}`, {
+            method: "DELETE",
+            headers: { "admin-signal": user?.id || "" }
+          });
+
+          if (res.ok) {
+            closeModal();
+            loadVault();
+          } else {
+            alert("TERMINATION FAILED");
+          }
+        } catch (err) {
+          alert("COMMUNICATION ERROR");
+        }
+      }
+
+      function addColorChipToGrid(color, grid) {
+          const chip = document.createElement('div');
+          chip.className = 'edit-color-chip relative';
+          chip.setAttribute('data-color', color);
+          chip.style.cssText = `width:40px;height:40px;border-radius:50%;background:${color};border:3px solid #000;box-shadow:0 0 0 2px #333;display:inline-block;cursor:default;position:relative;`;
+          const removeBtn = document.createElement('span');
+          removeBtn.innerText = '×';
+          removeBtn.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;width:18px;height:18px;border-radius:50%;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #000;';
+          removeBtn.onclick = () => chip.remove();
+          chip.appendChild(removeBtn);
+          grid.appendChild(chip);
+      }
+
+      function addEditColor() {
+          const hex = document.getElementById('edit-color-hex').value.trim();
+          if (!hex) return;
+          const grid = document.getElementById('edit-colors-grid');
+          addColorChipToGrid(hex, grid);
+          document.getElementById('edit-color-hex').value = '';
+      }
+
+
+      function handleEditMedia(input) {
+        const files = Array.from(input.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const maxDimension = 1000;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height && width > maxDimension) {
+                        height *= maxDimension / width;
+                        width = maxDimension;
+                    } else if (height > maxDimension) {
+                        width *= maxDimension / height;
+                        height = maxDimension;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+                    editMediaAssets.push({ url: compressedDataUrl, type: "image" });
+                    renderEditGallery();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+      }
+
+      function renderEditGallery() {
+        const grid = document.getElementById("editGalleryGrid");
+        grid.innerHTML = "";
+        editMediaAssets.forEach((asset, index) => {
+          const slot = document.createElement("div");
+          slot.style.cssText = `position:relative; aspect-ratio:1; border:2px solid ${index === editPrimaryIndex ? '#22c55e' : '#333'}; border-radius:8px; overflow:hidden; cursor:pointer; background:#111;`;
+          
+          // Render content first
+          if (asset.type === "image")
+            slot.innerHTML = `<img src="${asset.url}" style="width:100%; height:100%; object-fit:cover">`;
+          else
+            slot.innerHTML = `<video src="${asset.url}" style="width:100%; height:100%; object-fit:cover" muted loop autoplay></video>`;
+
+          slot.onclick = () => {
+            editPrimaryIndex = Number(index);
+            renderEditGallery();
+          };
+          
+          if (Number(index) === Number(editPrimaryIndex)) {
+              const badge = document.createElement('div');
+              badge.style.cssText = "position:absolute; top:4px; left:4px; background:#22c55e; color:#000; font-size:7px; font-weight:900; padding:2px 4px; border-radius:4px; z-index:20;";
+              badge.innerText = "PRIMARY";
+              slot.appendChild(badge);
+          }
+
+          const remove = document.createElement('div');
+          remove.innerHTML = '×';
+          // ENLARGED BUTTON
+          remove.style.cssText = 'position:absolute; top:5px; right:5px; background:#ef4444; color:#fff; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; z-index:30; border:2px solid #000; box-shadow: 0 2px 4px rgba(0,0,0,0.5);';
+          remove.onclick = (e) => {
+              e.stopPropagation();
+              editMediaAssets.splice(index, 1);
+              if (editPrimaryIndex >= editMediaAssets.length) editPrimaryIndex = 0;
+              renderEditGallery();
+          };
+          slot.appendChild(remove);
+          
+          grid.appendChild(slot);
+        });
+      }
+    </script>
+  </body>
+
+</html>
+
